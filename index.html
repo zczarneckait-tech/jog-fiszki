@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiszki – Językoznawstwo Ogólne</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    color: #2d3748;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .subtitle {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 640px;
+    background: #e2e8f0;
+    border-radius: 99px;
+    height: 8px;
+    margin-bottom: 10px;
+  }
+  .progress-bar {
+    height: 8px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.4s ease;
+  }
+  .counter {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .card-wrap {
+    perspective: 1200px;
+    width: 100%;
+    max-width: 640px;
+    height: 320px;
+    cursor: pointer;
+    margin-bottom: 24px;
+  }
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+    border-radius: 18px;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+  }
+  .card-front {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 10px 40px rgba(102,126,234,0.35);
+  }
+  .card-back {
+    background: white;
+    color: #2d3748;
+    transform: rotateY(180deg);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    overflow-y: auto;
+  }
+  .card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    margin-bottom: 16px;
+  }
+  .card-front .card-label { color: rgba(255,255,255,0.8); }
+  .card-back .card-label { color: #a0aec0; }
+  .card-term {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .card-category {
+    font-size: 0.75rem;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-top: 14px;
+  }
+  .card-definition {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #2d3748;
+    margin-bottom: 12px;
+  }
+  .card-example {
+    font-size: 0.88rem;
+    color: #718096;
+    background: #f7fafc;
+    border-left: 3px solid #667eea;
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+    width: 100%;
+  }
+  .card-example strong { color: #667eea; }
+  .hint {
+    font-size: 0.78rem;
+    color: #a0aec0;
+    margin-bottom: 20px;
+  }
+  .buttons {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 16px;
+  }
+  button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-no {
+    background: #fed7d7;
+    color: #c53030;
+  }
+  .btn-no:hover { background: #feb2b2; }
+  .btn-yes {
+    background: #c6f6d5;
+    color: #276749;
+  }
+  .btn-yes:hover { background: #9ae6b4; }
+  .btn-prev {
+    background: #e2e8f0;
+    color: #4a5568;
+    flex: 0.4;
+  }
+  .btn-prev:hover { background: #cbd5e0; }
+  .stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .stat-num.green { color: #38a169; }
+  .stat-num.red { color: #e53e3e; }
+  .stat-num.blue { color: #667eea; }
+  .filter-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 640px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: white;
+    color: #4a5568;
+    transition: all 0.2s;
+    flex: none;
+  }
+  .filter-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+  .filter-btn:hover:not(.active) { border-color: #667eea; color: #667eea; }
+  .end-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 480px;
+  }
+  .end-screen h2 { font-size: 2rem; margin-bottom: 8px; }
+  .end-screen p { color: #718096; margin-bottom: 24px; }
+  .btn-restart {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .btn-restart-wrong {
+    background: #fed7d7;
+    color: #c53030;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
+  }
+  .shuffle-btn {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 8px 20px;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .shuffle-btn:hover { background: #667eea; color: white; }
+</style>
+</head>
+<body>
+
+<h1>📚 Fiszki – Językoznawstwo Ogólne</h1>
+<p class="subtitle">Kliknij kartę, żeby zobaczyć definicję</p>
+
+<div class="filter-wrap" id="filters"></div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num blue" id="stat-total">0</div><div class="stat-label">Wszystkich</div></div>
+  <div class="stat"><div class="stat-num green" id="stat-yes">0</div><div class="stat-label">Umiałam</div></div>
+  <div class="stat"><div class="stat-num red" id="stat-no">0</div><div class="stat-label">Powtórzyć</div></div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+</div>
+<div class="counter" id="counter">1 / 1</div>
+
+<button class="shuffle-btn" onclick="shuffle()">🔀 Losuj kolejność</button>
+
+<div class="card-wrap" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <div class="card-label">Termin</div>
+      <div class="card-term" id="term">...</div>
+      <div class="card-category" id="category">...</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-label">Definicja i przykład</div>
+      <div class="card-definition" id="definition">...</div>
+      <div class="card-example" id="example">...</div>
+    </div>
+  </div>
+</div>
+
+<p class="hint" id="hint">👆 Kliknij kartę, żeby zobaczyć odpowiedź</p>
+
+<div class="buttons" id="answer-buttons" style="display:none">
+  <button class="btn-prev" onclick="prevCard()">← Wróć</button>
+  <button class="btn-no" onclick="answer(false)">✗ Nie umiałam</button>
+  <button class="btn-yes" onclick="answer(true)">✓ Umiałam</button>
+</div>
+
+<div class="end-screen" id="end-screen">
+  <h2>🎉 Koniec!</h2>
+  <p id="end-text"></p>
+  <button class="btn-restart" onclick="restart(false)">🔄 Zacznij od nowa</button>
+  <button class="btn-restart-wrong" onclick="restart(true)" id="btn-wrong" style="margin-top:10px">❌ Tylko te których nie umiałam</button>
+</div>
+
+<script>
+const ALL_CARDS = [
+  // =================== DZIAŁ 1: JĘZYK, ZNAK I KOMUNIKACJA ===================
+  {
+    term: "Język naturalny",
+    category: "Język, znak i komunikacja",
+    definition: "System znaków konwencjonalnych (opartych na umowie społecznej) i fonicznych (dźwiękowych), służący do porozumiewania się o wszystkim. Charakteryzuje się dwuklasowością: z ograniczonego słownika i skończonych reguł gramatycznych można tworzyć nieskończoną liczbę wypowiedzi.",
+    example: "Przykład: język polski, angielski, migowy — każdy jest systemem, którego reguł trzeba się nauczyć, ale dzięki nim można powiedzieć dosłownie wszystko."
+  },
+  {
+    term: "Signans i Signatum",
+    category: "Język, znak i komunikacja",
+    definition: "Dwa nierozerwalnie złączone elementy znaku. Signans (forma) to to, co percypujemy zmysłowo (np. dźwięk słowa). Signatum (znaczenie) to informacja, którą znak niesie.",
+    example: "Przykład: słowo 'pies' — signans to ciąg dźwięków [pjes], signatum to pojęcie czworonożnego ssaka."
+  },
+  {
+    term: "Oznaka (znak naturalny / symptom)",
+    category: "Język, znak i komunikacja",
+    definition: "Zjawisko niezamierzone i jednostronne — nie ma nadawcy, tylko odbiorca wnioskuje na podstawie wiedzy o świecie. Oznaki informują, ale nie komunikują. Dzielą się na: objawy (równoczesne), ślady (wnioskowanie ze skutku) i zapowiedzi (wnioskowanie o przyszłości).",
+    example: "Przykład: wypieki jako objaw gorączki, ślady stóp na śniegu, ciemne chmury jako zapowiedź deszczu."
+  },
+  {
+    term: "Znak konwencjonalny (sygnał)",
+    category: "Język, znak i komunikacja",
+    definition: "Zjawisko zamierzone i dwustronne — ma nadawcę i odbiorcę, opiera się na konwencji i umowie społecznej (uzusie). Dzieli się na: motywowane (ikoniczne — podobieństwo formy do przedmiotu) i niemotywowane (arbitralne — brak naturalnego związku).",
+    example: "Przykład arbitralny: czerwone światło = zakaz; znak motywowany: piktogram przedstawiający sylwetkę dziecka na przejściu."
+  },
+  {
+    term: "Symbol",
+    category: "Język, znak i komunikacja",
+    definition: "Zjawisko o dwóch znaczeniach: (1) semiotycznym — znak całkowicie konwencjonalny (jak symbole matematyczne); (2) kulturowym — odsyła do złożonej rzeczywistości, ma zmienne znaczenie zakorzenione kulturowo, częściowo motywowane.",
+    example: "Przykład: sowa jako symbol mądrości (motywowane kulturowo), π jako symbol liczby pi (ściśle umowny)."
+  },
+  {
+    term: "Indeks (wskaźnik)",
+    category: "Język, znak i komunikacja",
+    definition: "Znak okazjonalny, w którym przypisanie znaczenia opiera się na fizycznej styczności z obiektem. Wskazuje informacje o sytuacji 'tu i teraz'. W języku naturalnym pełnią tę rolę zaimki wskazujące.",
+    example: "Przykład: 'tu, tam, ten, on' — znaczenie zależy od kontekstu sytuacyjnego; wskazówka zegara pokazuje aktualną godzinę."
+  },
+  {
+    term: "Langue, Parole, Langage",
+    category: "Język, znak i komunikacja",
+    definition: "Trójpodział F. de Saussure'a: Langue — abstrakcyjny system języka (społeczny, ograniczony, stabilny); Parole — konkretne akty mowy (jednostkowe, nieograniczone, chwilowe); Langage — ogólna działalność mowna człowieka. Niezależnie wprowadzili tę dychotomię Saussure i Baudouin de Courtenay.",
+    example: "Przykład: słownik + gramatyka języka polskiego = langue; konkretne zdanie wypowiedziane teraz = parole."
+  },
+  {
+    term: "Kompetencja i wykonanie (Chomsky)",
+    category: "Język, znak i komunikacja",
+    definition: "Psychologiczny odpowiednik dychotomii Saussure'a. Kompetencja — zinternalizowana wiedza o regułach języka, pozwalająca tworzyć nieskończoną liczbę zdań. Wykonanie (performance) — konkretna realizacja tej wiedzy w mowie 'tu i teraz'.",
+    example: "Przykład: wiesz, że zdanie 'Kot śpi' jest poprawne, a 'Śpi kot ten' — nie, choć nikt Ci tego nie mówił explicite. To kompetencja."
+  },
+  {
+    term: "Dwuklasowość języka",
+    category: "Język, znak i komunikacja",
+    definition: "Cecha języka naturalnego polegająca na tym, że system składa się z dwóch klas: (1) ograniczonego słownika i (2) gramatyki — reguł łączenia. Dzięki temu z ograniczonego zasobu można tworzyć nieskończoną liczbę wypowiedzi. Pojęcie wywodzi się od K. Bühlera.",
+    example: "Przykład: znając 50 000 słów i reguły gramatyczne, można stworzyć zdanie, którego nikt nigdy wcześniej nie wypowiedział."
+  },
+  {
+    term: "Dwustopniowość (podwójna artykulacja)",
+    category: "Język, znak i komunikacja",
+    definition: "Cecha języka polegająca na tym, że znaki (obdarzone znaczeniem) zbudowane są z mniejszych, nieznaczących elementów — diakrytów (fonemów). Kilkadziesiąt fonemów tworzy nieskończoną liczbę znaków. Zapewnia ekonomiczność systemu.",
+    example: "Przykład: zamiana /a/ na /o/ zmienia znak 'rak' na 'rok' — fonem sam w sobie nic nie znaczy, ale różnicuje znaczenie."
+  },
+  {
+    term: "Abstrakcyjność języka",
+    category: "Język, znak i komunikacja",
+    definition: "Zdolność języka do komunikowania o zjawiskach nieobecnych, przeszłych, przyszłych lub całkowicie zmyślonych. Komunikacja ludzka nie jest uwarunkowana sytuacyjnie (w przeciwieństwie do komunikacji zwierząt).",
+    example: "Przykład: można powiedzieć 'Dinozaury wymarły 66 milionów lat temu' lub 'Może jutro pojadę na Marsa' — obie wypowiedzi dotyczą czegoś poza 'tu i teraz'."
+  },
+  {
+    term: "Frazemy (frazematyka)",
+    category: "Język, znak i komunikacja",
+    definition: "Gotowe, kliszowane formy językowe pośrednie między systemem a tekstem — odtwarzane, a nie tworzone na nowo. Zachowanie językowe to antynomia między sztampowością (gotowe formy) a oryginalnością (nowe wypowiedzi).",
+    example: "Przykład: 'iść komuś na rękę', 'Jak się masz?', 'Świeżo malowane' — wypowiadamy je jako gotowe całości, nie konstruujemy od zera."
+  },
+  {
+    term: "Koherencja i kohezja tekstu",
+    category: "Język, znak i komunikacja",
+    definition: "Dwa typy spójności tekstu. Koherencja — spójność semantyczno-logiczna (relacje treściowe między zdaniami). Kohezja — spójność formalna wyrażona przez wykładniki językowe (spójniki, zaimki anaforyczne).",
+    example: "Koherencja bez kohezji: 'Zachorował. Nie poszedł na zebranie.' — logicznie spójne bez spójnika. Kohezja: 'Zachorował, więc nie poszedł...' — formalne połączenie."
+  },
+  {
+    term: "Tekst, wypowiedź, dyskurs",
+    category: "Język, znak i komunikacja",
+    definition: "Tekst — spójny ciąg językowy z intencją komunikatywną; może być czynnością (ulotne zdarzenie) lub wytworem (utrwalony produkt). Wypowiedź — jednostkowy akt mowy z lokucją, illokucją i perlokucją. Dyskurs — (1) logicznie zrygoryzonana wypowiedź, (2) zdarzenie komunikacyjne, (3) typ wypowiedzi wspólnoty.",
+    example: "Przykład dyskursu kulturowego: 'dyskurs polityczny' — sposób mówienia charakterystyczny dla polityków, ze swoją retoryką i założeniami."
+  },
+
+  // =================== DZIAŁ 2: FUNKCJE JĘZYKA I PRAGMATYKA ===================
+  {
+    term: "Model funkcji języka — Bühler",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Karl Bühler (1934) wyróżnił 3 funkcje znaku językowego: (1) Ekspresywna — zorientowana na nadawcę, wyraża jego stany; (2) Impresywna — zorientowana na odbiorcę, wywiera nacisk; (3) Symboliczna (przedstawieniowa) — zorientowana na przedmiot, opisuje rzeczywistość.",
+    example: "Ekspresywna: 'Ale jestem zmęczony!'; Impresywna: 'Zamknij okno!'; Symboliczna: 'Woda wrze w 100°C'."
+  },
+  {
+    term: "Model funkcji języka — Jakobson",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Roman Jakobson (1960) przypisał funkcję każdemu z 6 elementów komunikacji: Nadawca → emotywna; Odbiorca → konatywna; Kontekst → poznawcza; Komunikat → poetycka; Kontakt → fatyczna; Kod → metajęzykowa.",
+    example: "Fatyczna: 'Halo? Słyszysz mnie?' — sprawdzanie kanału. Metajęzykowa: 'Co znaczy słowo koherencja?' — język o języku."
+  },
+  {
+    term: "Pragmatyka",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Dział semiotyki (termin: Ch. Morris, 1938) badający relacje między znakami a ich użytkownikami. Bada język w działaniu: intencje nadawcy, skutki u odbiorcy, wpływ kontekstu i kultury. Różnica od semantyki: semantyka bada znaczenie abstrakcyjnych zdań, pragmatyka — konkretnych wypowiedzi 'tu i teraz'.",
+    example: "Przykład: zdanie 'Czy możesz zamknąć okno?' — semantycznie to pytanie o zdolności, pragmatycznie to prośba."
+  },
+  {
+    term: "Lokucja, illokucja, perlokucja",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Trzy równoczesne wymiary aktu mowy wg J.L. Austina (1962). Lokucja — samo wypowiedzenie ciągu fonicznego. Illokucja — intencja nadawcy (obietnica, groźba, pytanie). Perlokucja — skutek wywołany u odbiorcy (uspokojenie, strach, działanie).",
+    example: "'Przyjdę do ciebie jutro' — lokucja: słowa; illokucja: obietnica lub groźba; perlokucja: ulga lub niepokój u odbiorcy."
+  },
+  {
+    term: "Performatywy i konstatacje (Austin)",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Austin podzielił wypowiedzi na: Konstatacje — opisują świat, oceniane jako prawda/fałsz. Performatywy — samo ich wypowiedzenie w odpowiednich warunkach tworzy nowy stan rzeczy; oceniane jako fortunne/niefortunne. Austin ostatecznie uznał, że każde stwierdzenie jest też jakimś aktem.",
+    example: "Konstatacja: 'Pada deszcz'. Performatyw: 'Ogłaszam was mężem i żoną' — wypowiedzenie tworzy nową rzeczywistość."
+  },
+  {
+    term: "Warunki skuteczności aktów mowy",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Aby akt mowy zadziałał, muszą być spełnione konwencje. Gdy coś zawodzi: Niewypał — warunki obiektywne niespełnione (np. ślub bez uprawnień, akt w nieodp. okolicznościach); Nadużycie — konwencja spełniona, ale brak szczerości intencji (obietnica bez zamiaru dotrzymania).",
+    example: "Niewypał: studenci 'nadają' sobie nawzajem doktoraty — akt nie zachodzi. Nadużycie: składanie przysięgi bez wewnętrznego przekonania."
+  },
+  {
+    term: "Typy aktów mowy — Searle",
+    category: "Funkcje języka i pragmatyka",
+    definition: "John Searle (1969) wyróżnił 5 typów: (1) Asertywy — opis stanów rzeczy; (2) Dyrektywy — nacisk na odbiorcę do działania; (3) Komisywy — zobowiązanie nadawcy do przyszłego działania; (4) Ekspresywy — wyrażanie stanów psychicznych; (5) Deklaratywy — tworzenie nowych stanów w rzeczywistości społecznej.",
+    example: "Asertyw: 'Woda wrze w 100°C'. Dyrektyw: 'Podaj sól'. Komisyw: 'Obiecuję'. Ekspresyw: 'Przepraszam'. Deklaratyw: 'Zwalniasz się pan z pracy'."
+  },
+  {
+    term: "Akty mowy bezpośrednie i pośrednie",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Bezpośrednie — forma zdania odpowiada intencji (tryb rozkazujący = rozkaz). Pośrednie — intencja inna niż dosłowna forma; wymagają odczytania z kontekstu i sytuacji.",
+    example: "Pośredni: 'Zimno tu' (stwierdzenie) = prośba o zamknięcie okna. 'Czy możesz podać mi sól?' = prośba, nie pytanie o zdolności."
+  },
+  {
+    term: "Implikatury konwersacyjne — Grice",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Paul Grice (1975) — konwersacja opiera się na zasadzie współpracy. 4 maksymy: ilości (bądź tak informatywny jak trzeba), jakości (mów prawdę), odniesienia (mów na temat), sposobu (mów jasno). Gdy nadawca świadomie łamie maksymę, odbiorca generuje implikaturę (sens naddany).",
+    example: "— Co się stało z kiełbasą? — Nasz pies wygląda na bardzo zadowolonego. → złamanie maksymy odniesienia → implikatura: pies zjadł kiełbasę."
+  },
+  {
+    term: "Funkcja sprawcza (performatywna)",
+    category: "Funkcje języka i pragmatyka",
+    definition: "Typ funkcji wypowiedzi — sama wypowiedź tworzy nowe stany rzeczy w rzeczywistości na mocy konwencji. Wymaga uprawnień nadawcy i odpowiednich okoliczności. Nie oceniamy jej jako prawda/fałsz, lecz jako fortunna/niefortuna.",
+    example: "Przykłady: wyrok sądowy, ślub ('Ogłaszam was mężem i żoną'), chrzest, zwolnienie z pracy — samo wypowiedzenie zmienia rzeczywistość."
+  },
+
+  // =================== DZIAŁ 3: FONETYKA I FONOLOGIA ===================
+  {
+    term: "Fonetyka vs fonologia",
+    category: "Fonetyka i fonologia",
+    definition: "Fonetyka — bada głoski jako zjawiska fizyczne (akustyczne i artykulacyjne); obiektywna, biologiczna. Fonologia — bada fonemy jako funkcjonalne elementy systemu; interesuje ją tylko to, czy cecha dźwięku odróżnia jedno słowo od drugiego; subiektywna (w polszczyźnie ok. 37–40 fonemów).",
+    example: "Fonetyka opisze dokładną artykulację głoski [p]. Fonologię interesuje tylko, że /p/ różni się od /b/ (co odróżnia 'pas' od 'bas')."
+  },
+  {
+    term: "Głoska vs fonem",
+    category: "Fonetyka i fonologia",
+    definition: "Głoska — konkretny, fizyczny dźwięk mowy; zjawisko z poziomu fonetyki. Fonem — abstrakcyjna jednostka systemu fonologicznego; wiązka cech dystynktywnych (diakrytów), która różnicuje znaczenie. Wiele głosek może realizować ten sam fonem (allofony).",
+    example: "Polskie 'r' wymawiane miękko lub twardo to różne głoski realizujące ten sam fonem /r/."
+  },
+  {
+    term: "Tony i szmery",
+    category: "Fonetyka i fonologia",
+    definition: "Dwa typy dźwięków mowy ze względu na charakter drgań. Tony — drgania regularne strunek głosowych; to samogłoski. Szmery — spółgłoski: szumy (trwałe, np. /sz/, /s/) i impulsy (nietrwałe, np. /p/, /t/).",
+    example: "Samogłoska /a/ = ton (regularne drgania). /sz/ = szum (trwały szmер). /p/ = impuls (krótkie zatrzymanie powietrza)."
+  },
+  {
+    term: "Sposoby artykulacji",
+    category: "Fonetyka i fonologia",
+    definition: "Klasyfikacja spółgłosek wg przepływu powietrza: Zwarte (p, b, t, d, k) — całkowite zwarcie; Szczelinowe (f, w, s, sz) — wąska szczelina; Zwarto-szczelinowe afrykaty (cz, dż, ć, dź) — zwarcie + szczelina; Drżące (r) — wibracje; Nosowe (m, n, ń) — przepływ przez nos.",
+    example: "/p/ — zwarta: powietrze zablokowane wargami, potem gwałtownie uwolnione. /s/ — szczelinowa: powietrze przechodzi przez wąską szczelinę."
+  },
+  {
+    term: "Dźwięczność / bezdźwięczność",
+    category: "Fonetyka i fonologia",
+    definition: "Cecha dystynktywna oparta na udziale strun głosowych (wiązadeł głosowych). Dźwięczne — struny wibrują (b, d, z, w). Bezdźwięczne — struny nie wibrują (p, t, s, f). Jest to kluczowa opozycja fonologiczna w języku polskim.",
+    example: "'bas' vs 'pas' — jedyna różnica to dźwięczność /b/ vs bezdźwięczność /p/. Oba słowa mają inne znaczenie dzięki tej jednej cesze."
+  },
+  {
+    term: "Prozodia",
+    category: "Fonetyka i fonologia",
+    definition: "Cechy suprasegmentalne — nakładają się na ciągi głosek: Iloczas — długość trwania głoski; Intonacja — zmiany wysokości tonu (antykadencja w pytaniach, kadencja na końcu zdań); Akcent — wyróżnienie sylaby głośnością (w polszczyźnie paroksytoniczny — na przedostatniej).",
+    example: "'Jutro?' (z antykadencją) = pytanie; 'Jutro.' (z kadencją) = stwierdzenie. To samo słowo, inne znaczenie dzięki intonacji."
+  },
+  {
+    term: "Funkcje fonologiczne",
+    category: "Fonetyka i fonologia",
+    definition: "(1) Dystynktywna — odróżnia znaki i tworzy sens (opozycja t/d: 'tom' vs 'dom'); (2) Delimitacyjno-grupująca — zaznacza granice wyrazów i grup składniowych (stały akcent w polszczyźnie); (3) Ekspresywna — modyfikacja foniczna dla wyrażenia emocji.",
+    example: "Ekspresywna: 'baaardzo ładne!' — wydłużenie /a/ wyraża intensywność, nie zmienia znaczenia leksykalnego."
+  },
+  {
+    term: "Opozycje fonologiczne i neutralizacje",
+    category: "Fonetyka i fonologia",
+    definition: "Opozycja fonologiczna — para fonemów różniąca się jedną cechą dystynktywną, odróżniająca znaczenie wyrazów. Neutralizacja — zanik opozycji w określonych pozycjach, gdy dwa fonemy przestają być rozróżnialne.",
+    example: "Ubezdźwięcznienie w polszczyźnie: 'chleb' wymawiane jako [chleP] — na końcu wyrazu /b/ i /p/ się neutralizują (pozycja neutralna)."
+  },
+
+  // =================== DZIAŁ 4: MORFOLOGIA I SŁOWOTWÓRSTWO ===================
+  {
+    term: "Morfem, morf, allomorf",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Morfem — abstrakcyjna, najmniejsza jednostka języka łącząca formę fonologiczną ze znaczeniem/funkcją. Morf — konkretna fizyczna realizacja morfemu w tekście. Allomorf — wariant morfemu: różna postać foniczna, ta sama funkcja i znaczenie (wynika z alternacji).",
+    example: "Morfem 'ręk-': allomorfy ręk-, ręc-, rąk-, rącz- — różne postacie foniczne tego samego morfemu (np. ręka, ręce, rączka)."
+  },
+  {
+    term: "Podział morfemów wg funkcji",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Morfemy leksykalne (rdzenie) — niosą znaczenie leksykalne: dom-, pis-, mał-. Morfemy słowotwórcze (afiksy) — tworzą nowe leksemy: -ek (kotek), -arz (pisarz), prze-. Morfemy fleksyjne (końcówki) — tworzą formy gramatyczne, sygnalizują relacje składniowe: -em (kotem), -owi (domowi).",
+    example: "W słowie 'pisarz': pis- (leksykalny) + -arz (słowotwórczy). W 'pisarzem': pis- + -arz + -em (fleksyjny)."
+  },
+  {
+    term: "Podział morfemów wg dystrybucji",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Swobodne — mogą stanowić oddzielne wyrazy: tu, dziś, trzeba. Związane — muszą łączyć się z innymi: rdzenie (pis-), prefiksy (prze-), sufiksy (-arz), końcówki (-em). Wszystkie morfemy fleksyjne i słowotwórcze są związane.",
+    example: "'tu' — morfem swobodny (samodzielny wyraz). '-ek' w 'kotek' — morfem związany (nie może wystąpić samodzielnie)."
+  },
+  {
+    term: "Słowotwórstwo vs fleksja",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Słowotwórstwo — tworzy nowe leksemy (nowe jednostki słownikowe), zmienia kategorię lub znaczenie: kot → kotek, pisać → pisarz. Fleksja — tworzy formy gramatyczne tego samego leksemu, sygnalizuje relacje składniowe: dom → domu, domowi, domem...",
+    example: "'dom' → 'domek' = słowotwórstwo (nowy leksem). 'dom' → 'domu' = fleksja (ta sama jednostka słownikowa, inna forma)."
+  },
+  {
+    term: "Kategorie gramatyczne imienne",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Rodzaj — dla rzeczownika: wrodzona cecha klasyfikująca (może być motywowana biologicznie lub arbitralna); dla przymiotnika: syntaktyczna (zgoda z rzeczownikiem). Liczba — kategoria semantyczna (ilość obiektów); neutralizacje: pluralia tantum (sanie), singularia tantum (młodość). Przypadek — sygnalizuje funkcję składniową.",
+    example: "'stół' (rodzaj męski — arbitralny), 'matka' (rodzaj żeński — motywowany). 'sanie' — tylko l. mnoga (pluralia tantum)."
+  },
+  {
+    term: "Kategorie gramatyczne werbalne",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Czas — umiejscawia zdarzenie względem momentu mówienia; w polszczyźnie związany z aspektem. Tryb — wyraża modalność: oznajmujący (fakty), przypuszczający (hipoteza/życzenie), rozkazujący (nakaz). Aspekt — dokonany (czynność zakończona) vs niedokonany (w toku).",
+    example: "'Jan czyta' (niedokonany, teraźniejszy). 'Jan przeczytał' (dokonany, przeszły). 'Jan czytałby' (tryb przypuszczający)."
+  },
+  {
+    term: "Mechanizmy nazwotwórcze",
+    category: "Morfologia i słowotwórstwo",
+    definition: "Sposoby tworzenia nowych leksemów: (1) Derywacja — afiksy (pisarz, domek); (2) Kompozycja — złożenie rdzeni (samochód, listonosz); (3) Konwersja — zmiana kategorii bez zmiany formy; (4) Skrótowce (PAN, NATO); (5) Zapożyczenia; (6) Neologizmy semantyczne — nowe znaczenie starego słowa (metafora, metonimia).",
+    example: "Derywacja: pisać → pisarz. Kompozycja: list + nosić = listonosz. Neologizm semantyczny: 'wirus' (biologiczny) → 'wirus' (komputerowy)."
+  },
+
+  // =================== DZIAŁ 5: SKŁADNIA I SEMANTYKA ===================
+  {
+    term: "Zdanie minimalne i konotacja czasownika",
+    category: "Składnia i semantyka",
+    definition: "Zdanie minimalne — struktura zawierająca orzeczenie i jego konotowane (wymagane) uzupełnienia. Konotacja (walencja) — właściwość czasownika polegająca na wymaganiu określonej liczby i rodzaju argumentów (aktantów). Bez nich zdanie jest semantycznie niepełne.",
+    example: "'spać' konotuje tylko podmiot: Kot śpi. 'dać' konotuje 3 argumenty: Jan dał Marii książkę (kto + co + komu). Brak któregoś = niekompletne zdanie."
+  },
+  {
+    term: "Generatywna składnia (Chomsky)",
+    category: "Składnia i semantyka",
+    definition: "Teoria zakładająca, że zdania generowane są przez reguły przepisywania: S→NP+VP, VP→V+NP. Kluczowe pojęcia: kompetencja (wiedza o regułach), struktury głębokie (reprezentacja znaczenia) i powierzchniowe (forma wypowiedzi), transformacje (reguły przejścia).",
+    example: "S → NP + VP → 'Ania' + 'pije wodę'. Struktury głębokie: 'Jan zabił Piotra' i 'Piotr został zabity przez Jana' mają tę samą strukturę głęboką."
+  },
+  {
+    term: "Typy zdań złożonych",
+    category: "Składnia i semantyka",
+    definition: "Parataktyczne (współrzędnie złożone) — zdania równorzędne (i, ale, lub, więc). Hipotaktyczne (podrzędnie złożone) — zdanie nadrzędne + podrzędne (że, bo, gdy). Względne (relacyjne) — wprowadzone przez zaimek względny (który, co). Intencjonalne (dopełnieniowe) — wyrażające treść myśli/mowy (żeby).",
+    example: "'Jan przyszedł i Maria wyszła' — parataktyczne. 'Wiem, że przyjdzie' — hipotaktyczne. 'Dom, który kupiłem' — względne."
+  },
+  {
+    term: "Skróty w drzewach syntaktycznych",
+    category: "Składnia i semantyka",
+    definition: "S = sentence (zdanie), NP = noun phrase (fraza rzeczownikowa), VP = verb phrase (fraza czasownikowa), PP = fraza przyimkowa, V = verb, N = noun, A = adjective, Aux = auxiliary (czasownik posiłkowy), Comp = complementizer (spójnik wprowadzający). Przypadki: nom, gen, dat, acc, instr, loc.",
+    example: "Zdanie 'Mały kot śpi w domu': S → [NP [A mały] [N kot]] + [VP [V śpi] [PP [P w] [NP [N domu]]]]"
+  },
+  {
+    term: "Relacje semantyczne: synonimia i antonimia",
+    category: "Składnia i semantyka",
+    definition: "Synonimia — leksemy o tym samym lub bardzo podobnym znaczeniu: dom/mieszkanie. Antonimia: gradualna (gorący/zimny — stopnie), komplementarna (żywy/martwy — brak środka), konwersyjna (kupić/sprzedać — odwrotna perspektywa).",
+    example: "Gradualna: gorący–ciepły–letni–chłodny–zimny. Komplementarna: żywy/martwy (tertium non datur). Konwersyjna: Jan kupił od Marii = Maria sprzedała Janowi."
+  },
+  {
+    term: "Relacje semantyczne: hiponimia i hiperonimia",
+    category: "Składnia i semantyka",
+    definition: "Hiponimia — relacja szczegół→ogół: wróbel jest hiponimem ptaka (podrzędne). Hiperonimia — relacja ogół→szczegół: ptak jest hiperonimem wróbla (nadrzędne). Meronymia — relacja część–całość: koło jest meronymem samochodu.",
+    example: "Hiponimia: wróbel, orzeł, pingwin → PTAK (hiperonim). Meronymia: serce, płuca → KLATKA PIERSIOWA (holonym)."
+  },
+  {
+    term: "Homonimia vs polisemia",
+    category: "Składnia i semantyka",
+    definition: "Homonimia — ta sama forma, różne niepowiązane znaczenia (różne etymologie). Polisemia — ta sama forma, różne znaczenia wywodzące się ze wspólnego źródła przez metaforę lub metonimię. Granica między nimi jest rozmyta.",
+    example: "Homonimia: 'zamek' (budowla) vs 'zamek' (do drzwi) — różne etymologie. Polisemia: 'noga' (człowieka) → 'noga stołu' — przeniesienie z jednego źródła."
+  },
+
+  // =================== DZIAŁ 6: TEORIE SEMANTYCZNE ===================
+  {
+    term: "Pola semantyczne (strukturalizm)",
+    category: "Teorie semantyczne",
+    definition: "Zbiór leksemów powiązanych znaczeniowo, które dzielą między siebie obszar rzeczywistości. Leksemy w polu wyznaczają się wzajemnie przez opozycje — zmiana jednego wpływa na zakres innych. Kluczowi badacze: J. Trier (teoria pól leksykalnych), L. Weisgerber.",
+    example: "Pole barw: czerwony, niebieski, zielony... Pole temperatury: gorący, ciepły, letni, chłodny, zimny — każdy wyznacza granice sąsiadów."
+  },
+  {
+    term: "Semantyka generatywna",
+    category: "Teorie semantyczne",
+    definition: "Teoria (Lakoff, McCawley, Ross) zakładająca, że znaczenie (struktury logiczne, kwantyfikatory) jest pierwotne wobec składni — odwrotnie niż u Chomsky'ego. Używa zapisu predykatowego. Krytyka Chomsky'ego: gramatycznie poprawne zdanie może być semantycznie absurdalne.",
+    example: "BIEC(JAN) = 'Jan biegnie'. ∀x(STUDENT(x)→CZYTA(x)) = 'Każdy student czyta'. 'Bezbarwne zielone idee śpią wściekle' — poprawne gramatycznie, absurdalne semantycznie."
+  },
+  {
+    term: "Semantyka składnikowa",
+    category: "Teorie semantyczne",
+    definition: "Rozkładanie znaczenia leksemu na składniki semantyczne (semy). Pozwala opisać relacje między leksemami i wyjaśnić selekcję składniową. Kluczowi badacze: Katz i Fodor (1963). Ograniczenie: słabo działa dla pojęć abstrakcyjnych.",
+    example: "'kawaler' = [+CZŁOWIEK][+DOROSŁY][+PŁEĆ MĘSKA][+NIEŻONATY]. 'klacz' = [+KOŃ][+DOROSŁY][+PŁEĆ ŻEŃSKA]. Dlatego '*Kamień śpi' jest dziwne — kamień nie ma cechy [+ŻYWY]."
+  },
+  {
+    term: "Model Sens ↔ Tekst",
+    category: "Teorie semantyczne",
+    definition: "Model (Mel'čuk, Apresjan, Żołkovskij) traktujący język jako maszynę przekształceń między sensem (tym, co chcemy powiedzieć) a tekstem (tym, co wypowiadamy). Przekształcenie przebiega przez poziomy: semantyczny → syntaktyczny → morfologiczny → fonologiczny. Słownik zawiera pary sens–forma z regułami przekształceń (funkcje leksykalne).",
+    example: "Ten sam sens: 'Jan zabił Piotra' = 'Piotr został zabity przez Jana' = 'Jan pozbawił Piotra życia' = 'Śmierć Piotra nastąpiła z ręki Jana'."
+  },
+  {
+    term: "Semantyka kognitywna — cechy wspólne",
+    category: "Teorie semantyczne",
+    definition: "Wspólne cechy różnych teorii kognitywnych: (1) znaczenie encyklopedyczne (cała wiedza o świecie); (2) brak ostrej granicy semantyka/pragmatyka; (3) kategoryzacja przez prototypy, nie cechy konieczne; (4) ucieleśnienie (embodiment) — znaczenie zakorzenione w ciele i doświadczeniu; (5) język jako część ogólnych zdolności poznawczych.",
+    example: "Encyklopedyczność: znaczenie 'nóż' obejmuje nie tylko definicję, ale wiedzę o kuchni, niebezpieczeństwie, użyciu — to nie da się oddzielić od kontekstu kulturowego."
+  },
+  {
+    term: "Metafora jako mechanizm poznawczy",
+    category: "Teorie semantyczne",
+    definition: "Lakoff i Johnson (1980) — metafora to nie ozdobnik, ale podstawowy mechanizm myślenia. Polega na mapowaniu struktury z domeny źródłowej na docelową. Metonimia — mechanizm oparty na przyległości/powiązaniu (część za całość lub odwrotnie).",
+    example: "CZAS TO PIENIĄDZ: 'tracić czas', 'inwestować czas', 'nie mam czasu'. SPÓR TO WALKA: 'atakować argument', 'bronić stanowiska'. Metonimia: 'Przeczytałem całego Szekspira' (dzieła zamiast autora)."
+  },
+  {
+    term: "Profilowanie, tło, figura",
+    category: "Teorie semantyczne",
+    definition: "Figura — element wyróżniony, na pierwszym planie (o czym mówimy). Tło — kontekst, z którego figura się wyodrębnia. Profilowanie — różne leksemy nazywające ten sam byt wyodrębniają różne jego aspekty (profile).",
+    example: "'brzeg', 'wybrzeże', 'plaża' — różne profile tego samego fragmentu terenu. 'kupić' vs 'sprzedać' — ta sama transakcja, różna figura (kupujący vs sprzedający)."
+  },
+  {
+    term: "Kategoryzacja (Rosch)",
+    category: "Teorie semantyczne",
+    definition: "Tradycyjna (Arystoteles): kategorie przez cechy konieczne i wystarczające — ostre granice. Kognitywna (Rosch): kategorie oparte na prototypach — najlepszych, najczęstszych przedstawicielach; członkostwo stopniowalne; rozmyte granice.",
+    example: "PTAK: szpak = dobry ptak (prototyp). Pingwin = słaby ptak (peryferium). Oba należą do kategorii, ale z różną 'siłą'. Nikt nie da jednoznacznej granicy, kiedy krzew staje się drzewem."
+  },
+  {
+    term: "Polisemia (ujęcie kognitywne)",
+    category: "Teorie semantyczne",
+    definition: "Sieć powiązanych znaczeń wywodzących się ze znaczenia centralnego (prototypowego). Nowe znaczenia powstają przez metaforyczne rozszerzenie lub metonimiczne przesunięcie. Brak wyraźnej granicy między polisemią a homonimią.",
+    example: "'noga': noga człowieka (prototyp) → noga stołu (metafora, podobieństwo kształtu/funkcji). 'okno': otwór → szybka → okno dialogowe na komputerze — łańcuch rozszerzeń."
+  },
+  {
+    term: "Blending — teoria integracji pojęć",
+    category: "Teorie semantyczne",
+    definition: "Fauconnier i Turner (1998/2002) — mechanizm tworzenia nowego znaczenia przez stapienie elementów z różnych przestrzeni mentalnych. Struktura: 2 przestrzenie wejściowe + przestrzeń ogólna → BLEND z emergentną strukturą nieobecną w żadnym wejściu. Jest bardziej ogólny niż metafora — obejmuje też humor, kontrfaktuały, analogie.",
+    example: "'Chirurg to rzeźnik': wejście 1 (chirurg: precyzja, cel terapeutyczny) + wejście 2 (rzeźnik: grube cięcia, brutalność) → blend: niekompetentny lekarz. Emergencja: ta ocena nie istnieje w żadnym wejściu osobno."
+  }
+];
+
+let cards = [...ALL_CARDS];
+let current = 0;
+let flipped = false;
+let scores = { yes: 0, no: 0 };
+let answered = new Array(cards.length).fill(null);
+let activeFilter = 'Wszystkie';
+
+const categories = ['Wszystkie', ...new Set(ALL_CARDS.map(c => c.category))];
+
+function initFilters() {
+  const wrap = document.getElementById('filters');
+  wrap.innerHTML = '';
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (cat === activeFilter ? ' active' : '');
+    btn.textContent = cat === 'Wszystkie' ? '🌐 Wszystkie' : cat;
+    btn.onclick = () => setFilter(cat);
+    wrap.appendChild(btn);
+  });
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  if (cat === 'Wszystkie') {
+    cards = [...ALL_CARDS];
+  } else {
+    cards = ALL_CARDS.filter(c => c.category === cat);
+  }
+  answered = new Array(cards.length).fill(null);
+  scores = { yes: 0, no: 0 };
+  current = 0;
+  flipped = false;
+  initFilters();
+  updateCard();
+  updateStats();
+  document.getElementById('end-screen').style.display = 'none';
+  document.querySelector('.card-wrap').style.display = 'block';
+  document.querySelector('.progress-bar-wrap').style.display = 'block';
+  document.querySelector('.counter').style.display = 'block';
+  document.querySelector('.shuffle-btn').style.display = 'inline-block';
+}
+
+function shuffle() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  answered = new Array(cards.length).fill(null);
+  scores = { yes: 0, no: 0 };
+  current = 0;
+  flipped = false;
+  updateCard();
+  updateStats();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('hint').textContent = '👇 Czy umiałaś?';
+  document.getElementById('answer-buttons').style.display = 'flex';
+}
+
+function answer(knew) {
+  answered[current] = knew;
+  if (knew) scores.yes++; else scores.no++;
+  updateStats();
+  current++;
+  if (current >= cards.length) {
+    showEnd();
+  } else {
+    flipped = false;
+    document.getElementById('card').classList.remove('flipped');
+    document.getElementById('answer-buttons').style.display = 'none';
+    document.getElementById('hint').textContent = '👆 Kliknij kartę, żeby zobaczyć odpowiedź';
+    updateCard();
+  }
+}
+
+function prevCard() {
+  if (current === 0) return;
+  current--;
+  if (answered[current] !== null) {
+    if (answered[current]) scores.yes--; else scores.no--;
+    answered[current] = null;
+    updateStats();
+  }
+  flipped = false;
+  document.getElementById('card').classList.remove('flipped');
+  document.getElementById('answer-buttons').style.display = 'none';
+  document.getElementById('hint').textContent = '👆 Kliknij kartę, żeby zobaczyć odpowiedź';
+  updateCard();
+}
+
+function updateCard() {
+  const c = cards[current];
+  document.getElementById('term').textContent = c.term;
+  document.getElementById('category').textContent = c.category;
+  document.getElementById('definition').textContent = c.definition;
+  document.getElementById('example').innerHTML = '<strong>💡 Przykład:</strong> ' + c.example;
+  const pct = Math.round((current / cards.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('counter').textContent = (current + 1) + ' / ' + cards.length;
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = cards.length;
+  document.getElementById('stat-yes').textContent = scores.yes;
+  document.getElementById('stat-no').textContent = scores.no;
+}
+
+function showEnd() {
+  document.querySelector('.card-wrap').style.display = 'none';
+  document.querySelector('.progress-bar-wrap').style.display = 'none';
+  document.querySelector('.counter').style.display = 'none';
+  document.getElementById('answer-buttons').style.display = 'none';
+  document.querySelector('.shuffle-btn').style.display = 'none';
+  document.getElementById('hint').textContent = '';
+  document.getElementById('progress-bar').style.width = '100%';
+  const end = document.getElementById('end-screen');
+  end.style.display = 'flex';
+  const pct = Math.round((scores.yes / cards.length) * 100);
+  document.getElementById('end-text').textContent =
+    `Umiałaś ${scores.yes} z ${cards.length} kart (${pct}%). ` +
+    (pct === 100 ? '🏆 Perfekcja!' : pct >= 80 ? '🎯 Świetnie!' : pct >= 60 ? '💪 Całkiem dobrze!' : '📖 Warto powtórzyć!');
+  const btnWrong = document.getElementById('btn-wrong');
+  btnWrong.style.display = scores.no > 0 ? 'block' : 'none';
+}
+
+function restart(wrongOnly) {
+  if (wrongOnly) {
+    const wrongIndices = answered.map((a, i) => a === false ? i : -1).filter(i => i >= 0);
+    cards = wrongIndices.map(i => cards[i]);
+  } else {
+    if (activeFilter === 'Wszystkie') cards = [...ALL_CARDS];
+    else cards = ALL_CARDS.filter(c => c.category === activeFilter);
+  }
+  answered = new Array(cards.length).fill(null);
+  scores = { yes: 0, no: 0 };
+  current = 0;
+  flipped = false;
+  document.getElementById('end-screen').style.display = 'none';
+  document.querySelector('.card-wrap').style.display = 'block';
+  document.querySelector('.progress-bar-wrap').style.display = 'block';
+  document.querySelector('.counter').style.display = 'block';
+  document.querySelector('.shuffle-btn').style.display = 'inline-block';
+  document.getElementById('hint').textContent = '👆 Kliknij kartę, żeby zobaczyć odpowiedź';
+  updateCard();
+  updateStats();
+}
+
+initFilters();
+updateCard();
+updateStats();
+</script>
+</body>
+</html>
