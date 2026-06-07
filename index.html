@@ -718,11 +718,18 @@ function shuffle() {
 }
 
 function flipCard() {
-  if (flipped) return;
-  flipped = true;
-  document.getElementById('card').classList.add('flipped');
-  document.getElementById('hint').textContent = '👇 Czy umiałaś?';
-  document.getElementById('answer-buttons').style.display = 'flex';
+  const card = document.getElementById('card');
+  if (!flipped) {
+    flipped = true;
+    card.classList.add('flipped');
+    document.getElementById('hint').textContent = '👆 Kliknij kartę, żeby wrócić do terminu';
+    document.getElementById('answer-buttons').style.display = 'flex';
+  } else {
+    card.classList.remove('flipped');
+    flipped = false;
+    document.getElementById('hint').textContent = '👆 Kliknij kartę, żeby zobaczyć odpowiedź';
+    document.getElementById('answer-buttons').style.display = 'none';
+  }
 }
 
 function answer(knew) {
